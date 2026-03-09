@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Private Chat</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:linear-gradient(135deg,#667eea,#764ba2);
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.chat-container{
+width:500px;
+height:600px;
+background:white;
+border-radius:15px;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+}
+
+.header{
+background:#667eea;
+color:white;
+padding:15px;
+font-size:18px;
+}
+
+.chat-box{
+flex:1;
+padding:15px;
+overflow-y:auto;
+background:#f1f1f1;
+display:flex;
+flex-direction:column;
+}
+
+.msg-left{
+background:#ffffff;
+padding:8px 12px;
+border-radius:10px;
+margin:5px;
+max-width:70%;
+width:fit-content;
+}
+
+.msg-right{
+background:#c8f7c5;
+padding:8px 12px;
+border-radius:10px;
+margin:5px;
+margin-left:auto;
+max-width:70%;
+width:fit-content;
+}
+
+.chat-input{
+display:flex;
+padding:10px;
+background:#eee;
+gap:10px;
+}
+
+.chat-input input{
+flex:1;
+padding:10px;
+border-radius:8px;
+border:none;
+outline:none;
+}
+
+.chat-input button{
+background:#ff9800;
+color:white;
+border:none;
+padding:10px 20px;
+border-radius:8px;
+cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="chat-container">
+
+<div class="header">
+Private Chat
+</div>
+
+<div class="chat-box" id="chatBox"></div>
+
+<div class="chat-input">
+<input id="to" placeholder="To user">
+<input id="msg" placeholder="Type message">
+<button onclick="send()">Send</button>
+</div>
+
+</div>
+
+<script>
+
+const user = localStorage.getItem("user");
+const token = localStorage.getItem("token");
+
+const chatBox = document.getElementById("chatBox");
+const msgInput = document.getElementById("msg");
+const toInput = document.getElementById("to");
+
+
+function send(){
+
+let message = msgInput.value.trim();
+let toUser = toInput.value.trim();
+
+if(!message || !toUser) return;
+
+let f = new FormData();
+
+f.append("sender",user);
+f.append("receiver",toUser);
+f.append("token",token);
+f.append("text",message);
+
+fetch("/send_message",{method:"POST",body:f})
+.then(()=>{
+
+msgInput.value="";
+load();
+
+});
+
+}
+
+
+function load(){
+
+let toUser = toInput.value.trim();
+if(!toUser) return;
+
+fetch(`/inbox?username=${user}&token=${token}`)
+.then(r=>r.json())
+.then(data=>{
+
+chatBox.innerHTML="";
+
+data.forEach(m=>{
+
+let div=document.createElement("div");
+
+if(m.from===user){
+div.className="msg-right";
+}else{
+div.className="msg-left";
+}
+
+div.innerText=m.text;
+
+chatBox.appendChild(div);
+
+});
+
+chatBox.scrollTop = chatBox.scrollHeight;
+
+});
+
+}
+
+setInterval(load,2000);
+
+</script>
+
+</body>
+</html>
