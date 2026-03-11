@@ -89,93 +89,54 @@ cursor:pointer;
 
 <body>
 
-<div class="chat-container">
+<h2>Chat</h2>
 
-<div class="header">
-Private Chat
-</div>
+<input id="user" placeholder="Send to user">
+<input id="msg">
 
-<div class="chat-box" id="chatBox"></div>
-
-<div class="chat-input">
-<input id="to" placeholder="To user">
-<input id="msg" placeholder="Type message">
 <button onclick="send()">Send</button>
-</div>
 
-</div>
+<div id="box"></div>
 
 <script>
 
-const user = localStorage.getItem("user");
-const token = localStorage.getItem("token");
-
-const chatBox = document.getElementById("chatBox");
-const msgInput = document.getElementById("msg");
-const toInput = document.getElementById("to");
-
+let user=localStorage.getItem("user")
 
 function send(){
 
-let message = msgInput.value.trim();
-let toUser = toInput.value.trim();
+let r=document.getElementById("user").value
+let m=document.getElementById("msg").value
 
-if(!message || !toUser) return;
+let f=new FormData()
 
-let f = new FormData();
-
-f.append("sender",user);
-f.append("receiver",toUser);
-f.append("token",token);
-f.append("text",message);
+f.append("sender",user)
+f.append("receiver",r)
+f.append("text",m)
 
 fetch("/send_message",{method:"POST",body:f})
-.then(()=>{
-
-msgInput.value="";
-load();
-
-});
 
 }
-
 
 function load(){
 
-let toUser = toInput.value.trim();
-if(!toUser) return;
-
-fetch(`/inbox?username=${user}&token=${token}`)
+fetch(`/inbox?username=${user}`)
 .then(r=>r.json())
-.then(data=>{
+.then(d=>{
 
-chatBox.innerHTML="";
+let box=document.getElementById("box")
 
-data.forEach(m=>{
+box.innerHTML=d.map(x=>`
+<p><b>${x.from}</b>: ${x.text}</p>
+`).join("")
 
-let div=document.createElement("div");
-
-if(m.from===user){
-div.className="msg-right";
-}else{
-div.className="msg-left";
-}
-
-div.innerText=m.text;
-
-chatBox.appendChild(div);
-
-});
-
-chatBox.scrollTop = chatBox.scrollHeight;
-
-});
+})
 
 }
 
-setInterval(load,2000);
+setInterval(load,2000)
 
 </script>
 
 </body>
+
 </html>
