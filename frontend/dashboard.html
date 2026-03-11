@@ -7,199 +7,103 @@
 
 <div class="box">
 
-<h3>Upload Files</h3>
+<h2>Dashboard</h2>
 
-<select id="expiry">
-<option value="24h">24 Hours</option>
-<option value="7d">7 Days</option>
-<option value="never">Never</option>
-</select>
+<input type="file" id="file">
 
-<br><br>
-
-<input type="file" id="files" multiple>
 <button onclick="upload()">Upload</button>
 
-<h3>My Files</h3>
-<div id="list"></div>
+<h3>Your Files</h3>
+
+<div id="files"></div>
 
 <br>
-<button onclick="goChat()">💬 Open Chat</button>
 
-</div>
+<button onclick="goChat()">💬 Chat</button>
 
 <script>
 
-let user = localStorage.getItem("user");
-let token = localStorage.getItem("token");
+function session(){
 
-/* Session check */
-if(!user || !token){
-    alert("Session expired. Please login again.");
-    window.location = "/";
+return{
+user:localStorage.getItem("user"),
+token:localStorage.getItem("token")
 }
 
-/* ================= UPLOAD ================= */
+}
 
 function upload(){
 
-    let user = localStorage.getItem("user");
-    let token = localStorage.getItem("token");
+let s=session()
 
-    if(!user || !token){
-        alert("Session expired. Login again.");
-        window.location="/";
-        return;
-    }
+let f=new FormData()
 
-    const fs = document.getElementById("files").files;
+f.append("username",s.user)
+f.append("token",s.token)
+f.append("file",document.getElementById("file").files[0])
 
-    if(fs.length === 0){
-        alert("Select files");
-        return;
-    }
-
-    let f = new FormData();
-
-    f.append("username", user);
-    f.append("token", token);
-    f.append("expiry", document.getElementById("expiry").value);
-
-    for(let i=0;i<fs.length;i++){
-        f.append("files", fs[i]);
-    }
-
-    fetch("/upload",{method:"POST",body:f})
-    .then(r=>r.json())
-    .then(d=>{
-
-        if(d.error){
-            alert("Error: " + d.error);
-            return;
-        }
-
-       alert("File uploaded successfully");
-        loadFiles();
-
-    })
-    .catch(()=>{
-        alert("Upload failed");
-    });
-
-}
-    <br>
-<button onclick="goChat()">💬 Open Chat</button>
-
-
-/* ================= LOAD FILES ================= */
-
-function loadFiles(){
-
-    let user = localStorage.getItem("user");
-    let token = localStorage.getItem("token");
-
-    fetch(`/my_files?username=${user}&token=${token}`)
-    .then(r=>r.json())
-    .then(d=>{
-
-        let list = document.getElementById("list");
-
-        if(!Array.isArray(d) || d.length===0){
-            list.innerHTML = "No files uploaded";
-            return;
-        }
-
-        list.innerHTML = d.map(x => `
-        <div>
-            ${x}
-            <span>
-                <button onclick="download('${x}')">⬇</button>
-                <button onclick="share('${x}')">📤</button>
-                <button onclick="del('${x}')">🗑</button>
-            </span>
-        </div>
-        `).join("");
-
-    })
-    .catch(()=>{
-        console.log("Failed to load files");
-    });
+fetch("/upload",{method:"POST",body:f})
+.then(()=>load())
 
 }
 
+function load(){
 
-/* ================= DOWNLOAD ================= */
+let s=session()
+
+fetch(`/my_files?username=${s.user}&token=${s.token}`)
+.then(r=>r.json())
+.then(d=>{
+
+let div=document.getElementById("files")
+
+div.innerHTML=d.map(x=>`
+<div>
+${x}
+<button onclick="download('${x}')">⬇</button>
+<button onclick="share('${x}')">📤</button>
+</div>
+`).join("")
+
+})
+
+}
 
 function download(f){
 
-    let user = localStorage.getItem("user");
-    let token = localStorage.getItem("token");
+let s=session()
 
-    location.href=`/download?username=${user}&token=${token}&filename=${f}`;
-
-}
-
-
-/* ================= DELETE ================= */
-
-function del(f){
-
-    let user = localStorage.getItem("user");
-    let token = localStorage.getItem("token");
-
-    let fd = new FormData();
-
-    fd.append("username",user);
-    fd.append("token",token);
-    fd.append("filename",f);
-
-    fetch("/delete_file",{method:"POST",body:fd})
-    .then(()=>loadFiles());
+location=`/download?username=${s.user}&token=${s.token}&filename=${f}`
 
 }
 
-function share(file){
+function share(f){
 
-  let user = localStorage.getItem("user");
-  let token = localStorage.getItem("token");
+let s=session()
 
-  let receiver = prompt("Enter username to share file:");
+let r=prompt("Receiver username")
 
-  if(!receiver) return;
+let fd=new FormData()
 
-  let fd = new FormData();
+fd.append("sender",s.user)
+fd.append("receiver",r)
+fd.append("token",s.token)
+fd.append("filename",f)
 
-  fd.append("sender", user);
-  fd.append("receiver", receiver);
-  fd.append("token", token);
-  fd.append("filename", file);
-
-  fetch("/share_file",{method:"POST",body:fd})
-  .then(r=>r.json())
-  .then(d=>{
-      if(d.error){
-        alert(d.error);
-      }else{
-        alert("File shared successfully");
-      }
-  });
+fetch("/share_file",{method:"POST",body:fd})
+.then(()=>alert("shared"))
 
 }
-
-/* ================= CHAT ================= */
 
 function goChat(){
-    window.location="/chat";
+window.location="/chat"
 }
 
-
-/* Initial load */
-
-loadFiles();
-setInterval(loadFiles,5000);
+load()
 
 </script>
 
 </body>
 
 </html>
+
