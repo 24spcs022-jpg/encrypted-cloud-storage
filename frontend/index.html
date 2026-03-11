@@ -5,36 +5,76 @@
 </head>
 <body>
 <div class="box">
-<h3>Register</h3>
-<input id="ru" placeholder="Username">
-<input id="rp" type="password" placeholder="Password">
+<h2>Login</h2>
+
+<input id="lu" placeholder="username">
+<input id="lp" type="password" placeholder="password">
+
+<button onclick="login()">Login</button>
+
+<hr>
+
+<h2>Register</h2>
+
+<input id="ru">
+<input id="rp" type="password">
+
 <button onclick="register()">Register</button>
 
-<h3>Login</h3>
-<input id="lu" placeholder="Username">
-<input id="lp" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
-</div>
-
 <script>
+
 function register(){
- let f=new FormData();
- f.append("username",ru.value);
- f.append("password",rp.value);
- fetch("/register",{method:"POST",body:f})
- .then(r=>r.json()).then(d=>alert(d.message||d.error));
+
+const ru=document.getElementById("ru")
+const rp=document.getElementById("rp")
+
+const strong=/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/
+
+if(!strong.test(rp.value)){
+alert("Weak password")
+return
 }
+
+let f=new FormData()
+
+f.append("username",ru.value)
+f.append("password",rp.value)
+
+fetch("/register",{method:"POST",body:f})
+.then(r=>r.json())
+.then(d=>alert(d.message||d.error))
+
+}
+
 function login(){
- let f=new FormData();
- f.append("username",lu.value);
- f.append("password",lp.value);
- fetch("/login",{method:"POST",body:f})
- .then(r=>r.json()).then(d=>{
-  localStorage.setItem("token",d.token);
-  localStorage.setItem("user",lu.value);
-  location.href="/dashboard";
- });
+
+const lu=document.getElementById("lu")
+const lp=document.getElementById("lp")
+
+let f=new FormData()
+
+f.append("username",lu.value)
+f.append("password",lp.value)
+
+fetch("/login",{method:"POST",body:f})
+.then(r=>r.json())
+.then(d=>{
+
+if(d.error){
+alert(d.error)
+return
 }
+
+localStorage.setItem("user",lu.value)
+localStorage.setItem("token",d.token)
+
+window.location="/dashboard"
+
+})
+
+}
+
 </script>
 </body>
 </html>
+
