@@ -220,6 +220,29 @@ def inbox():
     users=load_users()
 
     return jsonify(users[u]["messages"])
+    
+    # ---------- SEND MESSAGE ----------
+
+@app.post("/send_message")
+def send_message():
+
+    sender = request.form["sender"]
+    receiver = request.form["receiver"]
+    text = request.form["text"]
+
+    users = load_users()
+
+    if receiver not in users:
+        return jsonify({"error":"User not found"})
+
+    users[receiver]["messages"].append({
+        "from": sender,
+        "text": text
+    })
+
+    save_users(users)
+
+    return jsonify({"message":"sent"})
 
 
 if __name__=="__main__":
