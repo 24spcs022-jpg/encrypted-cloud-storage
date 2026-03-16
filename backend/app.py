@@ -1,7 +1,6 @@
-import os, json, base64, uuid, hashlib, time
+import os, json, uuid, hashlib, re
 from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
-import re
 
 app = Flask(__name__)
 CORS(app)
@@ -16,6 +15,8 @@ os.makedirs(UPLOADS, exist_ok=True)
 if not os.path.exists(USERS):
     json.dump({}, open(USERS, "w"))
 
+# ---------------- USERS ----------------
+
 def load_users():
     return json.load(open(USERS))
 
@@ -28,15 +29,13 @@ def hash_pw(p):
 def check_token(u,t,users):
     return u in users and users[u].get("token")==t
 
-
-# ---------- PASSWORD CHECK ----------
+# ---------------- PASSWORD CHECK ----------------
 
 def strong_password(p):
     pattern=r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$'
     return re.match(pattern,p)
 
-
-# ---------- FRONTEND ----------
+# ---------------- FRONTEND ----------------
 
 @app.get("/")
 def home():
@@ -50,8 +49,7 @@ def dash():
 def chat():
     return send_from_directory(FRONTEND,"chat.html")
 
-
-# ---------- REGISTER ----------
+# ---------------- REGISTER ----------------
 
 @app.post("/register")
 def register():
@@ -78,8 +76,7 @@ def register():
 
     return jsonify({"message":"Registered"})
 
-
-# ---------- LOGIN ----------
+# ---------------- LOGIN ----------------
 
 @app.post("/login")
 def login():
@@ -97,12 +94,12 @@ def login():
 
     token=str(uuid.uuid4())
     users[u]["token"]=token
+
     save_users(users)
 
     return jsonify({"token":token})
 
-
-# ---------- UPLOAD ----------
+# ---------------- UPLOAD ----------------
 
 @app.post("/upload")
 def upload():
@@ -128,8 +125,7 @@ def upload():
 
     return jsonify({"message":"Uploaded"})
 
-
-# ---------- FILE LIST ----------
+# ---------------- FILE LIST ----------------
 
 @app.get("/my_files")
 def my_files():
@@ -144,8 +140,7 @@ def my_files():
 
     return jsonify(list(users[u]["files"].keys()))
 
-
-# ---------- DOWNLOAD ----------
+# ---------------- DOWNLOAD ----------------
 
 @app.get("/download")
 def download():
@@ -163,8 +158,7 @@ def download():
 
     return send_file(os.path.join(UPLOADS,fid),as_attachment=True)
 
-
-# ---------- SHARE FILE ----------
+# ---------------- SHARE FILE ----------------
 
 @app.post("/share_file")
 def share_file():
@@ -190,67 +184,44 @@ def share_file():
 
     return jsonify({"message":"File shared"})
 
-
-# ---------- CHAT ----------
-
-@app.post("/send_message")
-def send():
-
-    s=request.form["sender"]
-    r=request.form["receiver"]
-    txt=request.form["text"]
-
-    users=load_users()
-
-    users[r]["messages"].append({
-        "from":s,
-        "text":txt
-    })
-
-    save_users(users)
-
-    return jsonify({"message":"sent"})
-
-
-# ---------- INBOX ----------
-
-@app.get("/inbox")
-def inbox():
-
-    u = request.args["username"]
-
-    users = load_users()
-
-    return jsonify(users[u]["messages"])
-    
-    # ---------- SEND MESSAGE ----------
+# ---------------- CHAT SEND ----------------
 
 @app.post("/send_message")
 def send_message():
 
-    sender = request.form["sender"]
-    receiver = request.form["receiver"]
-    text = request.form["text"]
+    sender=request.form["sender"]
+    receiver=request.form["receiver"]
+    text=request.form["text"]
 
-    users = load_users()
+    users=load_users()
 
     if receiver not in users:
         return jsonify({"error":"User not found"})
 
     users[receiver]["messages"].append({
-        "from": sender,
-        "text": text
+        "from":sender,
+        "text":text
     })
 
     save_users(users)
 
     return jsonify({"message":"sent"})
 
+# ---------------- CHAT INBOX ----------------
 
-if __name__=="__main__":
-   import os
+@app.get("/inbox")
+def inbox():
+
+    u=request.args["username"]
+
+    users=load_users()
+
+    return jsonify(users[u]["messages"])
+
+# ---------------- RUN SERVER ----------------
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
 
+    port = int(os.environ.get("PORT",10000))
+
+    app.run(host="0.0.0.0",port=port)
