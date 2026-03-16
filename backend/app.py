@@ -212,12 +212,14 @@ def send():
     return jsonify({"message":"sent"})
 
 
+# ---------- INBOX ----------
+
 @app.get("/inbox")
 def inbox():
 
-    u=request.args["username"]
+    u = request.args["username"]
 
-    users=load_users()
+    users = load_users()
 
     return jsonify(users[u]["messages"])
     
