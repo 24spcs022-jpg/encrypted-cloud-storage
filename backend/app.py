@@ -167,28 +167,28 @@ def download():
 # ---------- SHARE FILE ----------
 
 @app.post("/share_file")
-def share():
+def share_file():
 
     sender=request.form["sender"]
     receiver=request.form["receiver"]
+    filename=request.form["filename"]
     token=request.form["token"]
-    fname=request.form["filename"]
 
     users=load_users()
-
-    if not check_token(sender,token,users):
-        return jsonify({"error":"Session expired"})
 
     if receiver not in users:
         return jsonify({"error":"User not found"})
 
-    fid=users[sender]["files"][fname]
+    fid=users[sender]["files"].get(filename)
 
-    users[receiver]["files"][fname]=fid
+    if not fid:
+        return jsonify({"error":"File not found"})
+
+    users[receiver]["files"][filename]=fid
 
     save_users(users)
 
-    return jsonify({"message":"shared"})
+    return jsonify({"message":"File shared"})
 
 
 # ---------- CHAT ----------
