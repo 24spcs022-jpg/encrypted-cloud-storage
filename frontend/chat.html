@@ -30,6 +30,7 @@ background:#667eea;
 color:white;
 padding:15px;
 font-size:18px;
+text-align:center;
 }
 
 .chat-box{
@@ -89,14 +90,21 @@ cursor:pointer;
 
 <body>
 
-<h2>Chat</h2>
+<div class="chat-container">
 
+<div class="header">
+Private Chat
+</div>
+
+<div id="box" class="chat-box"></div>
+
+<div class="chat-input">
 <input id="user" placeholder="Send to user">
-<input id="msg">
-
+<input id="msg" placeholder="Type message">
 <button onclick="send()">Send</button>
+</div>
 
-<div id="box"></div>
+</div>
 
 <script>
 
@@ -104,16 +112,23 @@ let user = localStorage.getItem("user")
 
 function send(){
 
-let r=document.getElementById("user").value
-let m=document.getElementById("msg").value
+let receiver=document.getElementById("user").value
+let msg=document.getElementById("msg").value
+
+if(!receiver || !msg){
+alert("Enter username and message")
+return
+}
 
 let f=new FormData()
 
 f.append("sender",user)
-f.append("receiver",r)
-f.append("text",m)
+f.append("receiver",receiver)
+f.append("text",msg)
 
 fetch("/send_message",{method:"POST",body:f})
+
+document.getElementById("msg").value=""
 
 }
 
@@ -125,9 +140,25 @@ fetch(`/inbox?username=${user}`)
 
 let box=document.getElementById("box")
 
-box.innerHTML=d.map(x=>`
-<p><b>${x.from}</b>: ${x.text}</p>
-`).join("")
+box.innerHTML=""
+
+d.forEach(x=>{
+
+let div=document.createElement("div")
+
+if(x.from===user){
+div.className="msg-right"
+}else{
+div.className="msg-left"
+}
+
+div.innerText = x.from + ": " + x.text
+
+box.appendChild(div)
+
+})
+
+box.scrollTop=box.scrollHeight
 
 })
 
@@ -135,8 +166,9 @@ box.innerHTML=d.map(x=>`
 
 setInterval(load,2000)
 
+load()
+
 </script>
 
 </body>
-
 </html>
