@@ -163,27 +163,28 @@ def download():
 @app.post("/share_file")
 def share_file():
 
-    sender=request.form["sender"]
-    receiver=request.form["receiver"]
-    filename=request.form["filename"]
-    token=request.form["token"]
+    sender = request.form["sender"]
+    receiver = request.form["receiver"]
+    filename = request.form["filename"]
 
-    users=load_users()
+    users = load_users()
+
+    if sender not in users:
+        return jsonify({"error":"Sender not found"})
 
     if receiver not in users:
-        return jsonify({"error":"User not found"})
+        return jsonify({"error":"Receiver not found"})
 
-    fid=users[sender]["files"].get(filename)
-
-    if not fid:
+    if filename not in users[sender]["files"]:
         return jsonify({"error":"File not found"})
 
-    users[receiver]["files"][filename]=fid
+    fid = users[sender]["files"][filename]
+
+    users[receiver]["files"][filename] = fid
 
     save_users(users)
 
-    return jsonify({"message":"File shared"})
-
+    return jsonify({"message":"File shared successfully"})
 # ---------------- CHAT SEND ----------------
 
 @app.post("/send_message")
