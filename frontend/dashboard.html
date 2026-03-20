@@ -77,7 +77,39 @@ location=`/download?username=${s.user}&token=${s.token}&filename=${f}`
 
 }
 
-function share(f){
+function share(file){
+
+  let user = localStorage.getItem("user");
+  let token = localStorage.getItem("token");
+
+  let receiver = prompt("Enter username:");
+
+  if(!receiver) return;
+
+  receiver = receiver.trim();
+
+  let fd = new FormData();
+
+  fd.append("sender", user);
+  fd.append("receiver", receiver);
+  fd.append("filename", file);
+  fd.append("token", token);
+
+  fetch("/share_file",{method:"POST",body:fd})
+  .then(r=>r.json())
+  .then(d=>{
+
+      if(d.error){
+          alert("❌ " + d.error);
+      }else{
+          alert("✅ File shared");
+
+          loadFiles(); // refresh sender side
+      }
+
+  });
+
+}{
 
 let s=session()
 
