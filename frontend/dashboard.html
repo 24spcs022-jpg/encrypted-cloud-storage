@@ -1,60 +1,42 @@
 <!DOCTYPE html>
 <html>
-<head>
-<link rel="stylesheet" href="/frontend/style.css">
-</head>
 <body>
-
-<div class="box">
 
 <h2>Dashboard</h2>
 
 <input type="file" id="file">
-
 <button onclick="upload()">Upload</button>
 
 <h3>Your Files</h3>
-
 <div id="files"></div>
-
-<br>
 
 <button onclick="goChat()">💬 Chat</button>
 
 <script>
 
 function session(){
-
 return{
 user:localStorage.getItem("user"),
 token:localStorage.getItem("token")
 }
-
 }
 
 function upload(){
-
 let s=session()
-
 let f=new FormData()
-
 f.append("username",s.user)
 f.append("token",s.token)
 f.append("file",document.getElementById("file").files[0])
 
 fetch("/upload",{method:"POST",body:f})
 .then(()=>load())
-
 }
 
 function load(){
-
 let s=session()
-
 fetch(`/my_files?username=${s.user}&token=${s.token}`)
 .then(r=>r.json())
 .then(d=>{
-
 let div=document.getElementById("files")
 
 div.innerHTML=d.map(x=>`
@@ -64,78 +46,38 @@ ${x}
 <button onclick="share('${x}')">📤</button>
 </div>
 `).join("")
-
 })
-
 }
 
 function download(f){
-
 let s=session()
-
 location=`/download?username=${s.user}&token=${s.token}&filename=${f}`
-
 }
 
 function share(file){
-
-  let user = localStorage.getItem("user");
-  let token = localStorage.getItem("token");
-
-  let receiver = prompt("Enter username:");
-
-  if(!receiver) return;
-
-  receiver = receiver.trim();
-
-  let fd = new FormData();
-
-  fd.append("sender", user);
-  fd.append("receiver", receiver);
-  fd.append("filename", file);
-  fd.append("token", token);
-
-  fetch("/share_file",{method:"POST",body:fd})
-  .then(r=>r.json())
-  .then(d=>{
-
-      if(d.error){
-          alert("❌ " + d.error);
-      }else{
-          alert("✅ File shared");
-
-          loadFiles(); // refresh sender side
-      }
-
-  });
-
-}setInterval(loadFiles, 3000);{
-
 let s=session()
-
-let r=prompt("Receiver username")
+let receiver=prompt("Enter username")
+if(!receiver) return
 
 let fd=new FormData()
-
 fd.append("sender",s.user)
-fd.append("receiver",r)
-fd.append("token",s.token)
-fd.append("filename",f)
+fd.append("receiver",receiver.trim())
+fd.append("filename",file)
 
 fetch("/share_file",{method:"POST",body:fd})
-.then(()=>alert("shared"))
-
+.then(r=>r.json())
+.then(d=>{
+alert(d.message || d.error)
+})
 }
 
 function goChat(){
 window.location="/chat"
 }
 
+setInterval(load,3000)
 load()
 
 </script>
-
 </body>
-
 </html>
-
