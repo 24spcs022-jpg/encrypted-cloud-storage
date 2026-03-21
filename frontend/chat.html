@@ -1,172 +1,41 @@
 <!DOCTYPE html>
 <html>
-<head>
-<title>Private Chat</title>
-
-<style>
-
-body{
-margin:0;
-font-family:Arial;
-background:linear-gradient(135deg,#667eea,#764ba2);
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-}
-
-.chat-container{
-width:500px;
-height:600px;
-background:white;
-border-radius:15px;
-display:flex;
-flex-direction:column;
-overflow:hidden;
-}
-
-.header{
-background:#667eea;
-color:white;
-padding:15px;
-font-size:18px;
-text-align:center;
-}
-
-.chat-box{
-flex:1;
-padding:15px;
-overflow-y:auto;
-background:#f1f1f1;
-display:flex;
-flex-direction:column;
-}
-
-.msg-left{
-background:#ffffff;
-padding:8px 12px;
-border-radius:10px;
-margin:5px;
-max-width:70%;
-width:fit-content;
-}
-
-.msg-right{
-background:#c8f7c5;
-padding:8px 12px;
-border-radius:10px;
-margin:5px;
-margin-left:auto;
-max-width:70%;
-width:fit-content;
-}
-
-.chat-input{
-display:flex;
-padding:10px;
-background:#eee;
-gap:10px;
-}
-
-.chat-input input{
-flex:1;
-padding:10px;
-border-radius:8px;
-border:none;
-outline:none;
-}
-
-.chat-input button{
-background:#ff9800;
-color:white;
-border:none;
-padding:10px 20px;
-border-radius:8px;
-cursor:pointer;
-}
-
-</style>
-</head>
-
 <body>
 
-<div class="chat-container">
+<h2>Chat</h2>
 
-<div class="header">
-Private Chat
-</div>
-
-<div id="box" class="chat-box"></div>
-
-<div class="chat-input">
 <input id="user" placeholder="Send to user">
-<input id="msg" placeholder="Type message">
+<input id="msg">
 <button onclick="send()">Send</button>
-</div>
 
-</div>
+<div id="box"></div>
 
 <script>
 
 let user = localStorage.getItem("user")
 
 function send(){
-
-let receiver=document.getElementById("user").value
-let msg=document.getElementById("msg").value
-
-if(!receiver || !msg){
-alert("Enter username and message")
-return
-}
+let r=document.getElementById("user").value
+let m=document.getElementById("msg").value
 
 let f=new FormData()
-
 f.append("sender",user)
-f.append("receiver",receiver)
-f.append("text",msg)
+f.append("receiver",r)
+f.append("text",m)
 
 fetch("/send_message",{method:"POST",body:f})
-
-document.getElementById("msg").value=""
-
 }
 
 function load(){
-
 fetch(`/inbox?username=${user}`)
 .then(r=>r.json())
 .then(d=>{
-
-let box=document.getElementById("box")
-
-box.innerHTML=""
-
-d.forEach(x=>{
-
-let div=document.createElement("div")
-
-if(x.from===user){
-div.className="msg-right"
-}else{
-div.className="msg-left"
-}
-
-div.innerText = x.from + ": " + x.text
-
-box.appendChild(div)
-
+document.getElementById("box").innerHTML=
+d.map(x=>`<p><b>${x.from}</b>: ${x.text}</p>`).join("")
 })
-
-box.scrollTop=box.scrollHeight
-
-})
-
 }
 
 setInterval(load,2000)
-
-load()
 
 </script>
 
