@@ -1,16 +1,147 @@
 <!DOCTYPE html>
 <html>
+<head>
+<title>Dashboard</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#f4f6fb;
+}
+
+/* HEADER */
+.header{
+background:#667eea;
+color:white;
+padding:15px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.header h2{
+margin:0;
+}
+
+.logout{
+background:#ff4d4d;
+border:none;
+color:white;
+padding:8px 15px;
+border-radius:6px;
+cursor:pointer;
+}
+
+/* MAIN */
+.container{
+padding:20px;
+}
+
+/* UPLOAD BOX */
+.upload-box{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 2px 10px rgba(0,0,0,0.1);
+margin-bottom:20px;
+}
+
+.upload-box input{
+margin-right:10px;
+}
+
+.upload-box button{
+background:#667eea;
+color:white;
+border:none;
+padding:10px 15px;
+border-radius:6px;
+cursor:pointer;
+}
+
+/* FILE GRID */
+.files{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+gap:15px;
+}
+
+/* FILE CARD */
+.card{
+background:white;
+padding:15px;
+border-radius:10px;
+box-shadow:0 2px 10px rgba(0,0,0,0.1);
+display:flex;
+flex-direction:column;
+justify-content:space-between;
+}
+
+.card p{
+margin:0 0 10px 0;
+font-weight:bold;
+}
+
+/* BUTTONS */
+.actions{
+display:flex;
+justify-content:space-between;
+}
+
+.actions button{
+border:none;
+padding:6px 10px;
+border-radius:5px;
+cursor:pointer;
+}
+
+.download{
+background:#4caf50;
+color:white;
+}
+
+.share{
+background:#ff9800;
+color:white;
+}
+
+/* FLOAT BUTTON */
+.chat-btn{
+position:fixed;
+bottom:20px;
+right:20px;
+background:#667eea;
+color:white;
+padding:15px;
+border-radius:50%;
+font-size:20px;
+cursor:pointer;
+}
+
+</style>
+</head>
+
 <body>
 
-<h2>Dashboard</h2>
+<div class="header">
+<h2>☁ Cloud Dashboard</h2>
+<button class="logout" onclick="logout()">Logout</button>
+</div>
 
+<div class="container">
+
+<div class="upload-box">
 <input type="file" id="file">
 <button onclick="upload()">Upload</button>
+</div>
 
-<h3>Your Files</h3>
-<div id="files"></div>
+<div class="files" id="files"></div>
 
-<button onclick="goChat()">💬 Chat</button>
+</div>
+
+<div class="chat-btn" onclick="goChat()">💬</div>
 
 <script>
 
@@ -21,8 +152,10 @@ token:localStorage.getItem("token")
 }
 }
 
+/* UPLOAD */
 function upload(){
 let s=session()
+
 let f=new FormData()
 f.append("username",s.user)
 f.append("token",s.token)
@@ -32,52 +165,79 @@ fetch("/upload",{method:"POST",body:f})
 .then(()=>load())
 }
 
+/* LOAD FILES */
 function load(){
+
 let s=session()
+
 fetch(`/my_files?username=${s.user}&token=${s.token}`)
 .then(r=>r.json())
 .then(d=>{
-let div=document.getElementById("files")
 
-div.innerHTML=d.map(x=>`
-<div>
-${x}
-<button onclick="download('${x}')">⬇</button>
-<button onclick="share('${x}')">📤</button>
+let box=document.getElementById("files")
+
+if(d.length===0){
+box.innerHTML="<p>No files yet</p>"
+return
+}
+
+box.innerHTML=d.map(x=>`
+<div class="card">
+<p>${x}</p>
+
+<div class="actions">
+<button class="download" onclick="download('${x}')">⬇</button>
+<button class="share" onclick="share('${x}')">📤</button>
+</div>
+
 </div>
 `).join("")
+
 })
 }
 
+/* DOWNLOAD */
 function download(f){
 let s=session()
 location=`/download?username=${s.user}&token=${s.token}&filename=${f}`
 }
 
+/* SHARE */
 function share(file){
+
 let s=session()
+
 let receiver=prompt("Enter username")
 if(!receiver) return
 
 let fd=new FormData()
+
 fd.append("sender",s.user)
 fd.append("receiver",receiver.trim())
 fd.append("filename",file)
 
 fetch("/share_file",{method:"POST",body:fd})
 .then(r=>r.json())
-.then(d=>{
-alert(d.message || d.error)
-})
+.then(d=>alert(d.message || d.error))
+
 }
 
+/* CHAT */
 function goChat(){
 window.location="/chat"
 }
 
+/* LOGOUT */
+function logout(){
+localStorage.clear()
+window.location="/"
+}
+
+/* AUTO REFRESH */
 setInterval(load,3000)
 load()
 
 </script>
+
 </body>
 </html>
