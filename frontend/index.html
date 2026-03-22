@@ -15,12 +15,15 @@ justify-content:center;
 align-items:center;
 }
 
+/* GLASS EFFECT */
 .container{
-background:white;
+background:rgba(255,255,255,0.15);
+backdrop-filter:blur(15px);
 padding:30px;
-border-radius:15px;
+border-radius:20px;
 width:350px;
-box-shadow:0 5px 20px rgba(0,0,0,0.2);
+box-shadow:0 8px 32px rgba(0,0,0,0.3);
+color:white;
 }
 
 h2{
@@ -28,21 +31,13 @@ text-align:center;
 margin-bottom:15px;
 }
 
-.section{
-margin-bottom:20px;
-}
-
-.label{
-font-weight:bold;
-margin-top:10px;
-}
-
+/* INPUT */
 input{
 width:100%;
 padding:10px;
 margin:6px 0;
 border-radius:8px;
-border:1px solid #ccc;
+border:none;
 outline:none;
 }
 
@@ -50,7 +45,7 @@ outline:none;
 button{
 width:100%;
 padding:10px;
-background:#667eea;
+background:#ff9800;
 color:white;
 border:none;
 border-radius:8px;
@@ -58,31 +53,10 @@ cursor:pointer;
 margin-top:5px;
 }
 
-button:hover{
-background:#5a67d8;
+/* OTP BOX */
+#otpBox{
+display:none;
 }
-
-/* PASSWORD ROW */
-.pass-box{
-position:relative;
-}
-
-.eye{
-position:absolute;
-right:10px;
-top:12px;
-cursor:pointer;
-}
-
-/* STRENGTH */
-.strength{
-font-size:12px;
-margin-top:2px;
-}
-
-.weak{color:red;}
-.medium{color:orange;}
-.strong{color:green;}
 
 </style>
 </head>
@@ -94,65 +68,27 @@ margin-top:2px;
 <h2>☁ Cloud Storage</h2>
 
 <!-- REGISTER -->
-<div class="section">
-
-<div class="label">Register</div>
-
+<h3>Register</h3>
 <input id="ruser" placeholder="Username">
-
-<div class="pass-box">
-<input id="rpass" type="password" placeholder="Password" onkeyup="checkStrength()">
-<span class="eye" onclick="togglePass('rpass')">👁</span>
-</div>
-
-<div id="strength" class="strength"></div>
-
+<input id="rpass" type="password" placeholder="Password">
 <button onclick="register()">Create Account</button>
 
-</div>
-
 <!-- LOGIN -->
-<div class="section">
-
-<div class="label">Login</div>
-
+<h3>Login</h3>
 <input id="luser" placeholder="Username">
+<button onclick="sendOTP()">Send OTP</button>
 
-<div class="pass-box">
-<input id="lpass" type="password" placeholder="Password">
-<span class="eye" onclick="togglePass('lpass')">👁</span>
-</div>
-
-<button onclick="login()">Login</button>
-
+<!-- OTP -->
+<div id="otpBox">
+<input id="otp" placeholder="Enter OTP">
+<button onclick="verifyOTP()">Verify & Login</button>
 </div>
 
 </div>
 
 <script>
 
-/* LOGIN */
-function login(){
-
-let u=document.getElementById("luser").value
-let p=document.getElementById("lpass").value
-
-let f=new FormData()
-f.append("username",u)
-f.append("password",p)
-
-fetch("/login",{method:"POST",body:f})
-.then(r=>r.json())
-.then(d=>{
-if(d.token){
-localStorage.setItem("user",u)
-localStorage.setItem("token",d.token)
-window.location="/dashboard"
-}else{
-alert(d.error)
-}
-})
-}
+let generatedOTP = ""
 
 /* REGISTER */
 function register(){
@@ -166,35 +102,56 @@ f.append("password",p)
 
 fetch("/register",{method:"POST",body:f})
 .then(r=>r.json())
+.then(d=>alert(d.message || d.error))
+}
+
+/* SEND OTP */
+function sendOTP(){
+
+let u=document.getElementById("luser").value
+
+if(!u){
+alert("Enter username")
+return
+}
+
+/* GENERATE OTP */
+generatedOTP = Math.floor(1000 + Math.random()*9000).toString()
+
+alert("Your OTP: " + generatedOTP)  // demo purpose
+
+document.getElementById("otpBox").style.display="block"
+}
+
+/* VERIFY OTP */
+function verifyOTP(){
+
+let entered=document.getElementById("otp").value
+let user=document.getElementById("luser").value
+
+if(entered===generatedOTP){
+
+/* NORMAL LOGIN */
+let f=new FormData()
+f.append("username",user)
+f.append("password","dummy") // backend ignore password
+
+fetch("/login",{method:"POST",body:f})
+.then(r=>r.json())
 .then(d=>{
-alert(d.message || d.error)
+if(d.token){
+localStorage.setItem("user",user)
+localStorage.setItem("token",d.token)
+window.location="/dashboard"
+}else{
+alert("Login failed")
+}
 })
+
+}else{
+alert("Wrong OTP ❌")
 }
 
-/* SHOW / HIDE PASSWORD */
-function togglePass(id){
-let input=document.getElementById(id)
-input.type = input.type==="password" ? "text" : "password"
-}
-
-/* PASSWORD STRENGTH */
-function checkStrength(){
-
-let p=document.getElementById("rpass").value
-let s=document.getElementById("strength")
-
-if(p.length<6){
-s.innerHTML="Weak password"
-s.className="strength weak"
-}
-else if(p.match(/[A-Z]/) && p.match(/\d/)){
-s.innerHTML="Strong password"
-s.className="strength strong"
-}
-else{
-s.innerHTML="Medium password"
-s.className="strength medium"
-}
 }
 
 </script>
