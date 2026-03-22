@@ -1,80 +1,150 @@
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="stylesheet" href="/frontend/style.css">
-</head>
-<body>
-<div class="box">
-<h2>Login</h2>
+<title>Cloud Storage</title>
 
-<input id="lu" placeholder="username">
-<input id="lp" type="password" placeholder="password">
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:linear-gradient(135deg,#667eea,#764ba2);
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+/* MAIN BOX */
+.container{
+background:white;
+padding:30px;
+border-radius:15px;
+width:350px;
+box-shadow:0 5px 20px rgba(0,0,0,0.2);
+}
+
+/* TITLE */
+h2{
+text-align:center;
+margin-bottom:15px;
+}
+
+/* SECTION */
+.section{
+margin-bottom:20px;
+}
+
+/* INPUT */
+input{
+width:100%;
+padding:10px;
+margin:6px 0;
+border-radius:8px;
+border:1px solid #ccc;
+outline:none;
+}
+
+/* BUTTON */
+button{
+width:100%;
+padding:10px;
+background:#667eea;
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+margin-top:5px;
+}
+
+button:hover{
+background:#5a67d8;
+}
+
+/* LABEL */
+.label{
+font-weight:bold;
+margin-top:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>☁ Cloud Storage</h2>
+
+<!-- REGISTER FIRST -->
+<div class="section">
+
+<div class="label">Register</div>
+
+<input id="ruser" placeholder="Username">
+<input id="rpass" type="password" placeholder="Password">
+
+<button onclick="register()">Create Account</button>
+
+</div>
+
+<!-- LOGIN SECOND -->
+<div class="section">
+
+<div class="label">Login</div>
+
+<input id="luser" placeholder="Username">
+<input id="lpass" type="password" placeholder="Password">
 
 <button onclick="login()">Login</button>
 
-<hr>
+</div>
 
-<h2>Register</h2>
-
-<input id="ru">
-<input id="rp" type="password">
-
-<button onclick="register()">Register</button>
+</div>
 
 <script>
 
-function register(){
-
-const ru=document.getElementById("ru")
-const rp=document.getElementById("rp")
-
-const strong=/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/
-
-if(!strong.test(rp.value)){
-alert("Weak password")
-return
-}
-
-let f=new FormData()
-
-f.append("username",ru.value)
-f.append("password",rp.value)
-
-fetch("/register",{method:"POST",body:f})
-.then(r=>r.json())
-.then(d=>alert(d.message||d.error))
-
-}
-
 function login(){
 
-const lu=document.getElementById("lu")
-const lp=document.getElementById("lp")
+let u=document.getElementById("luser").value
+let p=document.getElementById("lpass").value
 
 let f=new FormData()
-
-f.append("username",lu.value)
-f.append("password",lp.value)
+f.append("username",u)
+f.append("password",p)
 
 fetch("/login",{method:"POST",body:f})
 .then(r=>r.json())
 .then(d=>{
-
-if(d.error){
+if(d.token){
+localStorage.setItem("user",u)
+localStorage.setItem("token",d.token)
+window.location="/dashboard"
+}else{
 alert(d.error)
-return
+}
+})
+
 }
 
-localStorage.setItem("user",lu.value)
-localStorage.setItem("token",d.token)
+function register(){
 
-window.location="/dashboard"
+let u=document.getElementById("ruser").value
+let p=document.getElementById("rpass").value
 
+let f=new FormData()
+f.append("username",u)
+f.append("password",p)
+
+fetch("/register",{method:"POST",body:f})
+.then(r=>r.json())
+.then(d=>{
+alert(d.message || d.error)
 })
 
 }
 
 </script>
+
 </body>
 </html>
-
