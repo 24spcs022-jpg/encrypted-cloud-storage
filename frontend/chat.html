@@ -25,6 +25,7 @@ flex-direction:column;
 overflow:hidden;
 }
 
+/* HEADER */
 .header{
 background:#667eea;
 color:white;
@@ -33,6 +34,7 @@ text-align:center;
 font-size:18px;
 }
 
+/* CHAT AREA */
 .chat-box{
 flex:1;
 padding:10px;
@@ -42,11 +44,13 @@ display:flex;
 flex-direction:column;
 }
 
+/* MESSAGES */
 .msg{
 padding:8px 12px;
 margin:5px;
 border-radius:10px;
 max-width:70%;
+word-wrap:break-word;
 }
 
 .left{
@@ -59,6 +63,7 @@ background:#c8f7c5;
 align-self:flex-end;
 }
 
+/* INPUT AREA */
 .input-box{
 display:flex;
 padding:10px;
@@ -67,14 +72,22 @@ background:#eee;
 }
 
 .input-box input{
-flex:1;
 padding:10px;
 border-radius:8px;
 border:none;
+outline:none;
+}
+
+#user{
+width:90px;
+}
+
+#msg{
+flex:1;
 }
 
 .input-box button{
-width:80px;   /* 🔥 fixed width */
+width:70px;
 background:#ff9800;
 color:white;
 border:none;
@@ -94,7 +107,7 @@ cursor:pointer;
 <div id="box" class="chat-box"></div>
 
 <div class="input-box">
-<input id="user" placeholder="User" style="max-width:120px;">
+<input id="user" placeholder="User">
 <input id="msg" placeholder="Message">
 <button onclick="send()">Send</button>
 </div>
@@ -125,6 +138,7 @@ fetch("/send_message",{method:"POST",body:f})
 
 document.getElementById("msg").value=""
 
+load()
 }
 
 function load(){
@@ -159,6 +173,13 @@ box.scrollTop = box.scrollHeight
 })
 
 }
+
+/* ENTER KEY SEND 🔥 */
+document.getElementById("msg").addEventListener("keypress",function(e){
+if(e.key==="Enter"){
+send()
+}
+})
 
 setInterval(load,2000)
 load()
