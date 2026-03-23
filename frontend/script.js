@@ -31,6 +31,51 @@ alert(d.error)
 
 })
 }
+let generatedOTP = ""
+
+function sendOTP(){
+
+let u = luser.value
+
+if(!u){
+alert("Enter username")
+return
+}
+
+generatedOTP = Math.floor(1000 + Math.random()*9000).toString()
+
+alert("OTP: " + generatedOTP)
+
+document.getElementById("otpBox").style.display="block"
+}
+
+function verifyOTP(){
+
+let entered = otp.value
+let user = luser.value
+
+if(entered !== generatedOTP){
+alert("Wrong OTP ❌")
+return
+}
+
+let f = new FormData()
+f.append("username", user)
+
+fetch("/login",{method:"POST",body:f})
+.then(r=>r.json())
+.then(d=>{
+
+if(d.token){
+localStorage.setItem("user",user)
+localStorage.setItem("token",d.token)
+window.location="/dashboard"
+}else{
+alert("Login failed")
+}
+
+})
+}
 
 function upload(){
 let fd=new FormData();
