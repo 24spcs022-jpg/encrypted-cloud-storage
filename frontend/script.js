@@ -11,16 +11,25 @@ body:JSON.stringify({username:ruser.value,password:rpass.value})
 }
 
 function login(){
-fetch(API+"/login",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({username:luser.value,password:lpass.value})
-})
+
+let f = new FormData()
+
+f.append("username", luser.value)
+f.append("password", lpass.value)
+
+fetch("/login",{method:"POST",body:f})
 .then(r=>r.json())
 .then(d=>{
-localStorage.token=d.token;
-window.location="dashboard.html";
-});
+
+if(d.token){
+localStorage.setItem("user",luser.value)
+localStorage.setItem("token",d.token)
+window.location="/dashboard"
+}else{
+alert(d.error)
+}
+
+})
 }
 
 function upload(){
