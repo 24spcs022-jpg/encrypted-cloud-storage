@@ -72,24 +72,26 @@ def register():
 def login():
 
     u = request.form.get("username")
+    p = request.form.get("password")   # optional
 
     users = load_users()
 
-    # ❌ check user exists
     if u not in users:
         return jsonify({"error":"User not found"})
 
-    # ✅ OTP system → no password check
-    token = str(uuid.uuid4())
+    # ✅ If password given → check
+    if p:
+        if users[u]["password"] != hash_pw(p):
+            return jsonify({"error":"Wrong password"})
 
+    # ✅ If no password → assume OTP verified (frontend)
+    
+    token = str(uuid.uuid4())
     users[u]["token"] = token
 
     save_users(users)
 
-    return jsonify({
-        "message": "Login successful",
-        "token": token
-    })
+    return jsonify({"token":token})
 
 # ---------- UPLOAD ----------
 @app.post("/upload")
