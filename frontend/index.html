@@ -73,17 +73,22 @@ display:none;
 <input id="rpass" type="password" placeholder="Password">
 <button onclick="register()">Create Account</button>
 
-<!-- LOGIN -->
 <h3>Login</h3>
-<input id="luser" placeholder="Username">
-<button onclick="sendOTP()">Send OTP</button>
 
-<!-- OTP -->
-<div id="otpBox">
+<input id="luser" placeholder="Username">
+
+<!-- PASSWORD LOGIN -->
+<input id="lpass" type="password" placeholder="Password">
+<button onclick="login()">Login with Password</button>
+
+<hr>
+
+<!-- OTP LOGIN -->
+<button onclick="sendOTP()">Login with OTP</button>
+
+<div id="otpBox" style="display:none;">
 <input id="otp" placeholder="Enter OTP">
 <button onclick="verifyOTP()">Verify & Login</button>
-</div>
-
 </div>
 
 <script>
