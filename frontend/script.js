@@ -12,17 +12,21 @@ body:JSON.stringify({username:ruser.value,password:rpass.value})
 
 function login(){
 
-let f = new FormData()
+let user = document.getElementById("luser").value
+let pass = document.getElementById("lpass").value
 
-f.append("username", luser.value)
-f.append("password", lpass.value)
+let f = new FormData()
+f.append("username", user)
+f.append("password", pass)
 
 fetch("/login",{method:"POST",body:f})
 .then(r=>r.json())
 .then(d=>{
 
+console.log("PASSWORD LOGIN:", d)
+
 if(d.token){
-localStorage.setItem("user",luser.value)
+localStorage.setItem("user",user)
 localStorage.setItem("token",d.token)
 window.location="/dashboard"
 }else{
@@ -30,6 +34,7 @@ alert(d.error)
 }
 
 })
+
 }
 let generatedOTP = ""
 
