@@ -53,11 +53,9 @@ cursor:pointer;
 margin-top:5px;
 }
 
-/* OTP BOX */
 #otpBox{
 display:none;
 }
-
 </style>
 </head>
 
@@ -86,9 +84,11 @@ display:none;
 <!-- OTP LOGIN -->
 <button onclick="sendOTP()">Login with OTP</button>
 
-<div id="otpBox" style="display:none;">
+<div id="otpBox">
 <input id="otp" placeholder="Enter OTP">
 <button onclick="verifyOTP()">Verify & Login</button>
+</div>
+
 </div>
 
 <script>
@@ -98,32 +98,65 @@ let generatedOTP = ""
 /* REGISTER */
 function register(){
 
-let u=document.getElementById("ruser").value
-let p=document.getElementById("rpass").value
+let u = document.getElementById("ruser").value
+let p = document.getElementById("rpass").value
 
-let f=new FormData()
-f.append("username",u)
-f.append("password",p)
+let f = new FormData()
+f.append("username", u)
+f.append("password", p)
 
 fetch("/register",{method:"POST",body:f})
 .then(r=>r.json())
 .then(d=>alert(d.message || d.error))
+
+}
+
+/* PASSWORD LOGIN */
+function login(){
+
+let user = document.getElementById("luser").value
+let pass = document.getElementById("lpass").value
+
+if(!user || !pass){
+alert("Enter username & password")
+return
+}
+
+let f = new FormData()
+f.append("username", user)
+f.append("password", pass)
+
+fetch("/login",{method:"POST",body:f})
+.then(r=>r.json())
+.then(d=>{
+
+console.log("PASSWORD LOGIN:", d)
+
+if(d.token){
+localStorage.setItem("user", user)
+localStorage.setItem("token", d.token)
+window.location="/dashboard"
+}else{
+alert(d.error || "Login failed")
+}
+
+})
+
 }
 
 /* SEND OTP */
 function sendOTP(){
 
-let u=document.getElementById("luser").value
+let u = document.getElementById("luser").value
 
 if(!u){
 alert("Enter username")
 return
 }
 
-/* GENERATE OTP */
 generatedOTP = Math.floor(1000 + Math.random()*9000).toString()
 
-alert("Your OTP: " + generatedOTP)  // demo purpose
+alert("Your OTP: " + generatedOTP)
 
 document.getElementById("otpBox").style.display="block"
 }
@@ -131,31 +164,37 @@ document.getElementById("otpBox").style.display="block"
 /* VERIFY OTP */
 function verifyOTP(){
 
-let entered=document.getElementById("otp").value
-let user=document.getElementById("luser").value
+let entered = document.getElementById("otp").value
+let user = document.getElementById("luser").value
 
-if(entered===generatedOTP){
+if(!entered){
+alert("Enter OTP")
+return
+}
 
-/* NORMAL LOGIN */
-let f=new FormData()
-f.append("username",user)
-f.append("password","dummy") // backend ignore password
+if(entered !== generatedOTP){
+alert("Wrong OTP ❌")
+return
+}
+
+let f = new FormData()
+f.append("username", user)   // 🔥 NO password here
 
 fetch("/login",{method:"POST",body:f})
 .then(r=>r.json())
 .then(d=>{
+
+console.log("OTP LOGIN:", d)
+
 if(d.token){
-localStorage.setItem("user",user)
-localStorage.setItem("token",d.token)
+localStorage.setItem("user", user)
+localStorage.setItem("token", d.token)
 window.location="/dashboard"
 }else{
-alert("Login failed")
+alert("Login failed ❌")
 }
-})
 
-}else{
-alert("Wrong OTP ❌")
-}
+})
 
 }
 
