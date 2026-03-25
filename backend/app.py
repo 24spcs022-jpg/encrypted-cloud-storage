@@ -72,20 +72,20 @@ def register():
 def login():
 
     u = request.form.get("username")
-    p = request.form.get("password")   # optional
+    p = request.form.get("password")  # optional
 
     users = load_users()
 
     if u not in users:
         return jsonify({"error":"User not found"})
 
-    # ✅ If password given → check
+    # ✅ Password login
     if p:
         if users[u]["password"] != hash_pw(p):
             return jsonify({"error":"Wrong password"})
 
-    # ✅ If no password → assume OTP verified (frontend)
-    
+    # ✅ OTP login (no password check)
+
     token = str(uuid.uuid4())
     users[u]["token"] = token
 
