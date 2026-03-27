@@ -112,6 +112,15 @@ def upload():
     save_users(users)
 
     return jsonify({"message":"Uploaded"})
+    import time
+
+# when saving file
+expiry_time = time.time() + 60   # 60 seconds expiry (test)
+
+files.append({
+    "filename": filename,
+    "expiry": expiry_time
+})
 
 # ---------- FILE LIST ----------
 @app.get("/my_files")
