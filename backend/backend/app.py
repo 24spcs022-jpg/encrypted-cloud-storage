@@ -94,8 +94,37 @@ def login():
     return jsonify({"token":token})
 
 # ---------- UPLOAD ----------
- import time
+import time
 
+@app.post("/upload")
+def upload():
+
+    u = request.form["username"]
+    t = request.form["token"]
+
+    users = load_users()
+
+    if not check_token(u, t, users):
+        return jsonify({"error": "Session expired"})
+
+    f = request.files["file"]
+
+    fid = str(uuid.uuid4())
+    path = os.path.join(UPLOADS, fid)
+    f.save(path)
+
+    # 🔥 ADD EXPIRY HERE
+    expiry_time = time.time() + 60   # 60 sec (test)
+
+    # store as dict instead of just fid
+    users[u]["files"][f.filename] = {
+        "id": fid,
+        "expiry": expiry_time
+    }
+
+    save_users(users)
+
+    return jsonify({"message": "Uploaded"})
 
 # ---------- FILE LIST ----------
 @app.get("/my_files")
