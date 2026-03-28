@@ -154,15 +154,30 @@ token:localStorage.getItem("token")
 
 /* UPLOAD */
 function upload(){
+
 let s=session()
+let fileInput=document.getElementById("file")
+
+if(fileInput.files.length === 0){
+alert("Select a file first ❌")
+return
+}
 
 let f=new FormData()
 f.append("username",s.user)
 f.append("token",s.token)
-f.append("file",document.getElementById("file").files[0])
+f.append("file",fileInput.files[0])
 
 fetch("/upload",{method:"POST",body:f})
-.then(()=>load())
+.then(r=>r.json())
+.then(d=>{
+alert(d.message || d.error)
+load()
+})
+.catch(()=>{
+alert("Upload failed ❌")
+})
+
 }
 
 /* LOAD FILES */
@@ -176,7 +191,7 @@ fetch(`/my_files?username=${s.user}&token=${s.token}`)
 
 let box=document.getElementById("files")
 
-if(d.length===0){
+if(!Array.isArray(d) || d.length===0){
 box.innerHTML="<p>No files yet</p>"
 return
 }
@@ -194,12 +209,16 @@ box.innerHTML=d.map(x=>`
 `).join("")
 
 })
+.catch(()=>{
+document.getElementById("files").innerHTML="<p>Error loading files ❌</p>"
+})
+
 }
 
 /* DOWNLOAD */
 function download(f){
 let s=session()
-location=`/download?username=${s.user}&token=${s.token}&filename=${f}`
+window.location=`/download?username=${s.user}&token=${s.token}&filename=${f}`
 }
 
 /* SHARE */
@@ -208,12 +227,19 @@ function share(file){
 let s=session()
 
 let receiver=prompt("Enter username")
+
 if(!receiver) return
 
-let fd=new FormData()
+receiver = receiver.trim()
 
+if(receiver === ""){
+alert("Invalid username ❌")
+return
+}
+
+let fd=new FormData()
 fd.append("sender",s.user)
-fd.append("receiver",receiver.trim())
+fd.append("receiver",receiver)
 fd.append("filename",file)
 
 fetch("/share_file",{method:"POST",body:fd})

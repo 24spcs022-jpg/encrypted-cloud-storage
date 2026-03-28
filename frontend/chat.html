@@ -120,19 +120,19 @@ let user = localStorage.getItem("user")
 
 function send(){
 
-let r=document.getElementById("user").value
-let m=document.getElementById("msg").value
+let r = document.getElementById("user").value
+let m = document.getElementById("msg").value
 
 if(!r || !m){
 alert("Enter user & message")
 return
 }
 
-let f=new FormData()
+let f = new FormData()
 
-f.append("sender",user)
-f.append("receiver",r)
-f.append("text",m)
+f.append("sender", user)
+f.append("receiver", r)
+f.append("text", m)
 
 fetch("/send_message",{method:"POST",body:f})
 
@@ -143,26 +143,29 @@ load()
 
 function load(){
 
-fetch(`/inbox?username=${user}`)
-.then(r=>r.json())
-.then(d=>{
+let other = document.getElementById("user").value
+let box = document.getElementById("box")
 
-let box=document.getElementById("box")
+if(!other) return
+
+fetch(`/messages?username=${user}&other=${other}`)
+.then(r=>r.json())
+.then(data=>{
+
 box.innerHTML=""
 
-d.forEach(x=>{
+data.forEach(msg=>{
 
-let div=document.createElement("div")
-
+let div = document.createElement("div")
 div.classList.add("msg")
 
-if(x.from===user){
+if(msg.from === user){
 div.classList.add("right")
+div.innerText = "You: " + msg.text
 }else{
 div.classList.add("left")
+div.innerText = msg.from + ": " + msg.text
 }
-
-div.innerText = x.from + ": " + x.text
 
 box.appendChild(div)
 
@@ -174,14 +177,14 @@ box.scrollTop = box.scrollHeight
 
 }
 
-/* ENTER KEY SEND 🔥 */
+/* ENTER KEY SEND */
 document.getElementById("msg").addEventListener("keypress",function(e){
 if(e.key==="Enter"){
 send()
 }
 })
 
-setInterval(load,2000)
+setInterval(load,1000)
 load()
 
 </script>
