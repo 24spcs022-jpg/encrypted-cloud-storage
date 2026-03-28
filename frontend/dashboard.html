@@ -203,6 +203,7 @@ box.innerHTML=d.map(x=>`
 <div class="actions">
 <button class="download" onclick="download('${x}')">⬇</button>
 <button class="share" onclick="share('${x}')">📤</button>
+<button class="delete" onclick="del('${x}')">🗑</button>
 </div>
 
 </div>
@@ -219,6 +220,26 @@ document.getElementById("files").innerHTML="<p>Error loading files ❌</p>"
 function download(f){
 let s=session()
 window.location=`/download?username=${s.user}&token=${s.token}&filename=${f}`
+}
+
+function del(file){
+
+let s = session()
+
+if(!confirm("Delete file ah?")) return
+
+let f = new FormData()
+f.append("username", s.user)
+f.append("token", s.token)
+f.append("filename", file)
+
+fetch("/delete_file",{method:"POST",body:f})
+.then(r=>r.json())
+.then(d=>{
+alert(d.message || d.error)
+load()
+})
+
 }
 
 /* SHARE */

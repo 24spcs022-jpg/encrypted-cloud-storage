@@ -117,9 +117,9 @@ def upload():
     expiry_time = time.time() + 60   # 60 sec (test)
 
     # store as dict instead of just fid
-    users[u]["files"][f.filename] = {
+    users[u]["files"][f.filename]={
         "id": fid,
-        "expiry": expiry_time
+        "expiry": expiry
     }
 
     save_users(users)
@@ -135,6 +135,11 @@ def my_files():
 
     if not check_token(u,t,users):
         return jsonify([])
+    current = time.time()
+
+for name, data in users[u]["files"].items():
+    if data["expiry"] > current:
+        result.append(name)
 
     return jsonify(list(users[u]["files"].keys()))
 
@@ -151,6 +156,35 @@ def download():
 
     fid=users[u]["files"][f]
     return send_file(os.path.join(UPLOADS,fid),as_attachment=True)
+
+@app.post("/delete_file")
+def delete_file():
+
+    u = request.form["username"]
+    t = request.form["token"]
+    fname = request.form["filename"]
+
+    users = load_users()
+
+    if not check_token(u,t,users):
+        return jsonify({"error":"Session expired"})
+
+    if fname not in users[u]["files"]:
+        return jsonify({"error":"File not found"})
+
+    fid = users[u]["files"][fname]["id"]
+
+    # delete file from folder
+    path = os.path.join(UPLOADS, fid)
+    if os.path.exists(path):
+        os.remove(path)
+
+    # delete from json
+    del users[u]["files"][fname]
+
+    save_users(users)
+
+    return jsonify({"message":"File deleted"})
 
 # ---------- SHARE ----------
 @app.post("/share_file")
