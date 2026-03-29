@@ -12,9 +12,6 @@ USERS = os.path.join(BASE, "users.json")
 
 os.makedirs(UPLOADS, exist_ok=True)
 
-# ✅ CHAT STORAGE
-CHATS = []
-
 # ---------- INIT USERS ----------
 if not os.path.exists(USERS):
     json.dump({}, open(USERS, "w"))
@@ -74,7 +71,6 @@ def register():
 # ---------- LOGIN ----------
 @app.post("/login")
 def login():
-
     u = request.form.get("username")
     p = request.form.get("password")
 
@@ -83,9 +79,8 @@ def login():
     if u not in users:
         return jsonify({"error":"User not found"})
 
-    if p:
-        if users[u]["password"] != hash_pw(p):
-            return jsonify({"error":"Wrong password"})
+    if users[u]["password"] != hash_pw(p):
+        return jsonify({"error":"Wrong password"})
 
     token = str(uuid.uuid4())
     users[u]["token"] = token
@@ -94,7 +89,7 @@ def login():
 
     return jsonify({"token":token})
 
-# ---------- UPLOAD WITH EXPIRY ----------
+# ---------- UPLOAD ----------
 @app.post("/upload")
 def upload():
 
@@ -111,38 +106,54 @@ def upload():
     path=os.path.join(UPLOADS,fid)
     f.save(path)
 
-    expiry = time.time() + 60   # 60 sec test
+    expiry = time.time() + 60
 
     users[u]["files"][f.filename]={
         "id": fid,
-        "expiry": expiry
+        "expiry": expiry,
+        "shared": False   # 🔥 IMPORTANT
     }
 
     save_users(users)
 
     return jsonify({"message":"Uploaded"})
 
-# ---------- FILE LIST (FILTER EXPIRY) ----------
+# ---------- FILE LIST ----------
 @app.get("/my_files")
 def my_files():
 
-    u=request.args["username"]
-    t=request.args["token"]
-    users=load_users()
+    u = request.args["username"]
+    t = request.args["token"]
 
-    if not check_token(u,t,users):
-        return jsonify([])
+    users = load_users()
 
-    current=time.time()
-    result=[]
+    if u not in users or users[u]["token"] != t:
+        return jsonify({})
 
-    for name,data in users[u]["files"].items():
-        if data["expiry"] > current:
-            result.append(name)
+    current = time.time()
 
-    return jsonify(result)
+    own = []
+    shared = []
 
-# ---------- DOWNLOAD WITH EXPIRY CHECK ----------
+    for name, data in users[u]["files"].items():
+
+        if data["expiry"] < current:
+            continue
+
+        if data.get("shared"):
+            shared.append({
+                "name": name,
+                "from": data.get("from", "unknown")
+            })
+        else:
+            own.append(name)
+
+    return jsonify({
+        "own": own,
+        "shared": shared
+    })
+
+# ---------- DOWNLOAD ----------
 @app.get("/download")
 def download():
 
@@ -164,6 +175,34 @@ def download():
 
     return send_file(os.path.join(UPLOADS,file_data["id"]),as_attachment=True)
 
+# ---------- DELETE ----------
+@app.post("/delete_file")
+def delete_file():
+
+    u=request.form["username"]
+    t=request.form["token"]
+    fname=request.form["filename"]
+
+    users=load_users()
+
+    if not check_token(u,t,users):
+        return jsonify({"error":"Session expired"})
+
+    if fname not in users[u]["files"]:
+        return jsonify({"error":"File not found"})
+
+    fid = users[u]["files"][fname]["id"]
+
+    path=os.path.join(UPLOADS,fid)
+    if os.path.exists(path):
+        os.remove(path)
+
+    del users[u]["files"][fname]
+
+    save_users(users)
+
+    return jsonify({"message":"File deleted"})
+
 # ---------- SHARE ----------
 @app.post("/share_file")
 def share_file():
@@ -180,12 +219,21 @@ def share_file():
     if filename not in users[sender]["files"]:
         return jsonify({"error":"File not found"})
 
-    users[receiver]["files"][filename]=users[sender]["files"][filename]
+    file_data = users[sender]["files"][filename]
+
+    users[receiver]["files"][filename] = {
+        "id": file_data["id"],
+        "expiry": file_data["expiry"],
+        "shared": True,
+        "from": sender
+    }
 
     save_users(users)
     return jsonify({"message":"File shared"})
 
 # ---------- CHAT ----------
+CHATS = []
+
 @app.post("/send_message")
 def send_message():
 
