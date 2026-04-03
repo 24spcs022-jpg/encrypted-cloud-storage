@@ -1,0 +1,24 @@
+{
+  "Tamil": {
+    "password": "6bd7c0343740cba5db5eb5e627e28e29a1964ef6d4364b5f972ed659f5f2eedd",
+    "files": {
+      "diagram.png": {
+        "id": "743f98dd-e37c-49c8-9123-c7f2fbc88044",
+        "expiry": 1774704689.370262
+      }
+    },
+    "messages": [],
+    "token": "a4f6c4ab-ef71-48db-a0cd-16ba39e14eee"
+  },
+  "guru": {
+    "password": "a792bc993e36ff7b3005c20df038945a128f4747f31946a084bf7b6491a716fc",
+    "files": {
+      "diagram.png": {
+        "id": "f01f7766-f03e-43aa-b0d9-2b35c9853755",
+        "expiry": 1774705097.478208
+      }
+    },
+    "messages": [],
+    "token": "436e2f07-5ebb-40e8-84d6-239dcf6e970f"
+  }
+}
